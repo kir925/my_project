@@ -1,21 +1,27 @@
 import time
 import paho.mqtt.client as mqtt_client
+import random
 
 broker = "broker.emqx.io"
-client_id = 'subscriber'
+client_id = 'publisher'
 
-def on_message(client, userdata, message):
-    data = message.payload.decode("utf-8")
-    print("Received message:", data)
-
-def subscribe_to_mqtt():
+def publish_data(topic, data):
     client = mqtt_client.Client(client_id)
-    client.on_message = on_message
-
     client.connect(broker)
-    client.subscribe("lab/leds/state")
-    client.loop_forever()
+    client.loop_start()
+
+    client.publish(topic, data)
+
+    client.disconnect()
+    client.loop_stop()
+
+def simulate_and_publish(satellite):
+    while True:
+        state = "on" if random.randint(0, 1) == 0 else "off"
+        state += satellite
+        publish_data("lab/leds/state", state)
+        time.sleep(2)
 
 if __name__ == "__main__":
-    subscribe_to_mqtt()
-
+    satellite = "ANTC00CHL"  # Здесь можно сделать параметр для передачи из FastAPI
+    simulate_and_publish(satellite)
