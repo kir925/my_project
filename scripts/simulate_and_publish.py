@@ -25,4 +25,3 @@ def simulate_and_publish(satellite):
 if __name__ == "__main__":
     satellite = "ANTC00CHL"  # Здесь можно сделать параметр для передачи из FastAPI
     simulate_and_publish(satellite)
-
