@@ -11,10 +11,14 @@ import shutil
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DataDownloader")
 
+# Добавляем аргумент для имени спутника
+satellite_name = sys.argv[1] if len(sys.argv) > 1 else "default_satellite"
+
 date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
-link = f"https://api.simurg.space/datafiles/map_files?date={date}"
+link = f"https://api.simurg.space/datafiles/map_files?date={date}&satellite={satellite_name}"
 file_name = f"{date}.zip"
 
+# Остальной код остается прежним
 def download_file(url, file_name):
     with open(file_name, "wb") as f:
         logger.info(f"Скачивание {file_name}")
@@ -115,4 +119,3 @@ if __name__ == "__main__":
     convert_crx_to_rnx(date)
 
     logger.info("Все файлы успешно загружены, декомпрессированы и конвертированы")
-
