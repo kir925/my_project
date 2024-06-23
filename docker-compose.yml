@@ -1,1 +1,35 @@
+version: '3.8'
+
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  fastapi:
+    build: ./fastapi
+    ports:
+      - "80:80"
+    volumes:
+      - ./fastapi:/app
+    depends_on:
+      - mqtt-broker
+
+  publisher:
+    build: ./src/publisher
+    command: python publisher.py
+    volumes:
+      - ./src/publisher:/app
+    depends_on:
+      - mqtt-broker
+
+  subscriber:
+    build: ./src/subscriber
+    command: python subscriber.py
+    volumes:
+      - ./src/subscriber:/app
+    depends_on:
+      - mqtt-broker
 
