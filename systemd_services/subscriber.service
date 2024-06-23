@@ -3,11 +3,10 @@ Description=Subscriber Service
 After=network.target
 
 [Service]
-User=your_user
-WorkingDirectory=/home/your_user/Practice
-ExecStart=/usr/bin/python3 /home/your_user/Practice/src/subscriber/subscriber.py
+ExecStart=/usr/bin/docker start -a subscriber
+ExecStop=/usr/bin/docker stop -t 2 subscriber
 Restart=always
+User=root
 
 [Install]
 WantedBy=multi-user.target
-
