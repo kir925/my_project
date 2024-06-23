@@ -1,1 +1,13 @@
+[Unit]
+Description=FastAPI Service
+After=network.target
+
+[Service]
+User=your_user
+WorkingDirectory=/home/your_user/Practice/fastapi
+ExecStart=/usr/bin/docker-compose up
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
 
