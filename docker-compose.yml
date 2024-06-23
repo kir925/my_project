@@ -1,31 +1,17 @@
 version: '3'
-
 services:
   fastapi:
-    build: ./fastapi
-    container_name: fastapi
+    build:
+      context: ./fastapi
     ports:
-      - "8000:80"
+      - "80:80"
+    volumes:
+      - ./fastapi:/app
+    depends_on:
+      - downloader
+
+  downloader:
+    build:
+      context: ./data_downloader
     volumes:
       - ./data_downloader:/app/data_downloader
-
-  publisher:
-    build: ./src/publisher
-    container_name: publisher
-    depends_on:
-      - mqtt-broker
-    volumes:
-      - ./data_downloader:/data_downloader
-
-  subscriber:
-    build: ./src/subscriber
-    container_name: subscriber
-    depends_on:
-      - mqtt-broker
-
-  mqtt-broker:
-    image: eclipse-mosquitto
-    container_name: mqtt-broker
-    ports:
-      - "1883:1883"
-      - "9001:9001"
