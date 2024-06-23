@@ -3,11 +3,10 @@ Description=Publisher Service
 After=network.target
 
 [Service]
-User=your_user
-WorkingDirectory=/home/your_user/Practice
-ExecStart=/usr/bin/python3 /home/your_user/Practice/src/publisher/publisher.py
+ExecStart=/usr/bin/docker start -a publisher
+ExecStop=/usr/bin/docker stop -t 2 publisher
 Restart=always
+User=root
 
 [Install]
 WantedBy=multi-user.target
-
