@@ -1,1 +1,13 @@
+[Unit]
+Description=Subscriber Service
+After=network.target
+
+[Service]
+User=your_user
+WorkingDirectory=/home/your_user/Practice
+ExecStart=/usr/bin/python3 /home/your_user/Practice/src/subscriber/subscriber.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
 
