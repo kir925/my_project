@@ -1,34 +1,23 @@
-# fastapi/main.py
-from fastapi import FastAPI, HTTPException, Query
-from pathlib import Path
-from typing import Optional
-from gnss_tec import rnx
+# data_downloader/downloading_files.py
+import os
+from datetime import datetime
 
-app = FastAPI()
+def download_files():
+    today = datetime.today().strftime('%Y-%m-%d')
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to GNSS Data Downloader"}
+    satellite_data = {
+        "ANTC00CHL": "ANTC00CHL_R_20241680000_01D_30S_MO.rnx",
+        "AREG00PER": "AREG00PER_R_20241680000_01D_30S_MO.rnx",
+        "AREQ00PER": "AREQ00PER_R_20241680000_01D_30S_MO.rnx",
+        "ASCG00SHN": "ASCG00SHN_R_20241680000_01D_30S_MO.rnx",
+        "BAKE00CAN": "BAKE00CAN_R_20241680000_01D_30S_MO.rnx",
+    }
 
-@app.post("/request-data/")
-def request_data(date: str = Query(..., description="Date in YYYY-MM-DD format"),
-                 satellite_name: str = Query(..., description="Name of the satellite")):
-    directory_path = f"data_downloader/{date}/{satellite_name}"
-    file_name = f"{satellite_name}_R_{date}_01D_30S_MO.rnx"
-    file_path = Path(directory_path) / file_name
+    for satellite_name, file_name in satellite_data.items():
+        directory_path = f"data_downloader/{today}/{satellite_name}"
+        os.makedirs(directory_path, exist_ok=True)
+        with open(os.path.join(directory_path, file_name), 'w') as f:
+            f.write("Example file content")
 
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"File {file_name} not found for {satellite_name} on {date}")
-
-    with open(file_path, 'r') as obs_file:
-        reader = rnx(obs_file)
-        tec_data = []
-        for tec in reader:
-            tec_data.append({
-                "timestamp": tec.timestamp,
-                "satellite": tec.satellite,
-                "phase_tec": tec.phase_tec,
-                "p_range_tec": tec.p_range_tec,
-            })
-
-    return {"date": date, "satellite_name": satellite_name, "tec_data": tec_data}
+if __name__ == "__main__":
+    download_files()
