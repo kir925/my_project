@@ -2,6 +2,7 @@ import schedule
 import time
 import requests
 import os
+import sys  # Добавляем импорт модуля sys
 from datetime import datetime, timedelta
 
 def download_data(date, save_dir):
@@ -22,7 +23,7 @@ def download_data(date, save_dir):
                 dl += len(data)
                 f.write(data)
                 done = int(50 * dl / total_length)
-                sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)))
+                sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)))  # Исправлено
                 sys.stdout.flush()
 
 def job():
