@@ -1,1 +1,13 @@
+[Unit]
+Description=GNSS Data Processing and Emulation Daemon
+After=network.target
+
+[Service]
+User=your_username
+WorkingDirectory=/path/to/gnss_data_simulator
+ExecStart=/usr/bin/python3 /path/to/gnss_data_simulator/daemon/daemon.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
 
