@@ -1,61 +1,50 @@
-from fastapi import FastAPI, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
-import paho.mqtt.client as mqtt_client
-import asyncio
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+available_topics = ["receiver_1", "receiver_2", "receiver_3"]
 
-broker = "broker.emqx.io"
-mqtt_client_instance = mqtt_client.Client()
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket GNSS Data</title>
+    </head>
+    <body>
+        <h1>GNSS Data Stream</h1>
+        <ul id='messages'>
+        </ul>
+        <script>
+            const ws = new WebSocket("ws://localhost:8000/ws");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+        </script>
+    </body>
+</html>
+"""
 
-subscriptions = {}
+@app.get("/")
+async def get():
+    return HTMLResponse(html)
 
-@app.on_event("startup")
-async def startup_event():
-    mqtt_client_instance.connect(broker)
-    mqtt_client_instance.loop_start()
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    mqtt_client_instance.loop_stop()
-    mqtt_client_instance.disconnect()
+@app.get("/topics")
+async def get_topics():
+    return {"topics": available_topics}
 
 @app.websocket("/ws/{topic}")
 async def websocket_endpoint(websocket: WebSocket, topic: str):
     await websocket.accept()
-    
-    if topic not in subscriptions:
-        subscriptions[topic] = []
-        mqtt_client_instance.subscribe(topic)
-    
-    subscriptions[topic].append(websocket)
-
-    while True:
-        try:
+    if topic not in available_topics:
+        await websocket.close(code=1003)
+    try:
+        while True:
             data = await websocket.receive_text()
-        except:
-            subscriptions[topic].remove(websocket)
-            if not subscriptions[topic]:
-                mqtt_client_instance.unsubscribe(topic)
-                del subscriptions[topic]
-            break
-
-def on_mqtt_message(client, userdata, message):
-    topic = message.topic
-    payload = message.payload.decode('utf-8')
-
-    if topic in subscriptions:
-        websockets = subscriptions[topic]
-        for ws in websockets:
-            asyncio.run(ws.send_text(payload))
-
-mqtt_client_instance.on_message = on_mqtt_message
-
+            await websocket.send_text(f"Message text was: {data}")
+    except WebSocketDisconnect:
+        pass
