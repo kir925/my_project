@@ -4,6 +4,7 @@ import gzip
 import shutil
 import subprocess
 
+
 def extract_file(file_path, extract_dir):
     _, extension = os.path.splitext(file_path)
     extracted_files = []
@@ -29,6 +30,17 @@ def extract_file(file_path, extract_dir):
 
     return extracted_files
 
+
+def find_latest_zip(directory):
+    downloads_dir = os.path.join(directory, 'downloads')
+    zip_files = [f for f in os.listdir(downloads_dir) if f.endswith('.zip')]
+    if zip_files:
+        latest_zip = max(zip_files, key=lambda f: os.path.getctime(os.path.join(downloads_dir, f)))
+        return os.path.join(downloads_dir, latest_zip)
+    else:
+        return None
+
+
 def extract_nested_files(archive_file, extract_dir):
     os.makedirs(extract_dir, exist_ok=True)
     files_to_process = [archive_file]
@@ -40,36 +52,36 @@ def extract_nested_files(archive_file, extract_dir):
             if extracted_file.endswith(('.zip', '.gz', '.z', '.Z')):
                 files_to_process.append(os.path.join(extract_dir, extracted_file))
 
-def process_files(extract_dir, rnx_dir):
-    os.makedirs(rnx_dir, exist_ok=True)
-    for root, dirs, files in os.walk(extract_dir):
+
+def process_files(directory):
+    for root, dirs, files in os.walk(directory):
         for filename in files:
             if filename.endswith(".crx"):
                 crx_file = os.path.join(root, filename)
-                rnx_file = os.path.join(rnx_dir, filename.replace(".crx", ".rnx"))
+                rnx_file = crx_file.replace(".crx", ".rnx")
                 print(f"Converting {crx_file} to {rnx_file}")
-                subprocess.run(["crx2rnx", crx_file, rnx_file, "-f"])
+                # Пример команды для конвертации .crx в .rnx
+                subprocess.run(["crx2rnx", crx_file, "-f"])
             elif filename.endswith(".24d"):
                 d_file = os.path.join(root, filename)
-                o_file = os.path.join(rnx_dir, filename.replace(".24d", ".24o"))
+                o_file = d_file.replace(".24d", ".24o")
                 print(f"Converting {d_file} to {o_file}")
-                subprocess.run(["crx2rnx", d_file, o_file, "-f"])
+                # Пример команды для конвертации .24d в .24o
+                subprocess.run(["crx2rnx", d_file, "-f"])
+
 
 if __name__ == "__main__":
-    import argparse
+    # Находим последний загруженный zip-файл в директории 'downloads'
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    archive_file = find_latest_zip(current_dir)
 
-    parser = argparse.ArgumentParser(description="Process RINEX files.")
-    parser.add_argument("--archive_file", type=str, default='zip/2024-01-01.zip',
-                        help="Path to the archive file containing RINEX data.")
-    parser.add_argument("--extract_dir", type=str, default='extracted_data',
-                        help="Directory where extracted files will be saved.")
-    parser.add_argument("--rnx_dir", type=str, default='rnx_files',
-                        help="Directory where processed .rnx and .24o files will be saved.")
-    
-    args = parser.parse_args()
+    if archive_file is None:
+        print("В директории downloads не найдено zip-файлов.")
+    else:
+        extract_dir = 'extracted_data'
 
-    # Распаковка вложенных сжатых файлов из архива
-    extract_nested_files(args.archive_file, args.extract_dir)
+        # Распаковка вложенных сжатых файлов из найденного zip-файла
+        extract_nested_files(archive_file, extract_dir)
 
-    # Обработка файлов .crx и .24d в распакованной директории
-    process_files(args.extract_dir, args.rnx_dir)
+        # Обработка файлов .crx и .24d в распакованной директории
+        process_files(extract_dir)
